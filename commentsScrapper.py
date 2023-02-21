@@ -1,34 +1,24 @@
-from youtube_comment_downloader import *
+import youtube_comment_downloader as ycd
 import pandas as pd
 import logging
 import os
-from datetime import datetime
-import pytz
-from pytz import timezone
+import time
 
 filename = 'video_ids.csv'  # CHANGE THIS VALUE WITH LIST OF IDS
 
-# datetime config
-datetimesp = datetime.now(pytz.timezone('America/Sao_Paulo'))
-dt = datetimesp.strftime('%d/%m/%Y %H:%M')
-tz = timezone('America/Sao_Paulo')
-def timetz(*args):
-	return datetime.now(tz).timetuple()
-
 # logging config
-logging.Formatter.converter = timetz
 logging.basicConfig(filename = 'comments.log', filemode = 'w', level = logging.INFO, format = '%(asctime)s | %(message)s', datefmt='%Y/%m/%d %H:%M:%S %Z', force = True)
 
 # function to get comments
 def getComments(videoid):
 
 	# check if comments file already exists
-	writefilename = 'comments/' + videoid + '.xlsx'
+	writefilename = 'comments/' + videoid + '.json'
 	if os.path.isfile(writefilename):
 		message = 'comments file already exists'
 		return message
 	
-	downloader = YoutubeCommentDownloader()
+	downloader = ycd.YoutubeCommentDownloader()
 	
     # get comments
 	try:
@@ -43,7 +33,7 @@ def getComments(videoid):
 	try:
 		df = pd.DataFrame(comments)
 		count = len(df.index)
-		df.to_excel('comments/' + videoid + '.xlsx', index=False)
+		df.to_json('comments/' + videoid + '.json', orient='records', indent=4)
 	except:
 		message = 'Cannot save to dataFrame.'
 		return message
@@ -59,4 +49,4 @@ for i, id in enumerate(dados['videoId']):
 	videoid = dados.loc[i, 'videoId']
 	message = getComments(videoid)
 	logging.info(f'{str(i)} | {videoid} | {message}')
-	print(dt + " | " + str(i) + " | " + videoid + " | " + message)
+	print(str(i) + " | " + videoid + " | " + message)
