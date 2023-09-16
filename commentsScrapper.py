@@ -4,16 +4,17 @@ import logging
 import os
 import time
 
-filename = 'video_ids.csv'  # CHANGE THIS VALUE WITH LIST OF IDS
+script_path = os.path.dirname(os.path.abspath(__file__))
+filename = f'{script_path}/ids_novos.csv'
 
 # logging config
-logging.basicConfig(filename = 'comments.log', filemode = 'w', level = logging.INFO, format = '%(asctime)s | %(message)s', datefmt='%Y/%m/%d %H:%M:%S %Z', force = True)
+logging.basicConfig(filename = f'{script_path}/comments.log', filemode = 'w', level = logging.INFO, format = '%(asctime)s | %(message)s', datefmt='%Y/%m/%d %H:%M:%S %Z', force = True)
 
 # function to get comments
 def getComments(videoid):
 
 	# check if comments file already exists
-	writefilename = 'comments/' + videoid + '.json'
+	writefilename = f'{script_path}/comments/' + videoid + '.json'
 	if os.path.isfile(writefilename):
 		message = 'comments file already exists'
 		return message
@@ -29,20 +30,24 @@ def getComments(videoid):
 		message = 'Cannot get comments.'
 		return message
 
-    # create dataFrame and save to excel file
+    # create dataFrame and save to json file
 	try:
 		df = pd.DataFrame(comments)
 		count = len(df.index)
-		df.to_json('comments/' + videoid + '.json', orient='records', indent=4)
-	except:
-		message = 'Cannot save to dataFrame.'
+		json_filename = f'{script_path}/comments/' + videoid + '.json'
+  
+		with open(json_filename, 'w', encoding='utf8') as f:
+			f.write(df.to_json(orient='records', indent=4, force_ascii=False))
+   
+	except Exception as e:
+		message = 'Cannot save to dataFrame. Error: ' + str(e)
 		return message
 
 	message = 'Downloaded ' + str(count) + ' comments in [{:.2f} seconds]. Done!'.format(time.time() - start_time)
 	return message
 
 # read CSV file
-dados = pd.read_csv(filename)
+dados = pd.read_csv(filename, encoding='utf8')
 
 # call function
 for i, id in enumerate(dados['videoId']):
